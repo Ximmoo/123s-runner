@@ -1,0 +1,857 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>123s - 跑者数据中心</title>
+    <style>
+        :root {
+            --primary-color: #ff3366;
+            --primary-gradient: linear-gradient(135deg, #ff3366 0%, #ff6633 100%);
+            --card-bg: rgba(255, 255, 255, 0.9);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'PingFang SC', 'Microsoft YaHei', -apple-system, BlinkMacSystemFont, sans-serif; }
+        
+        body {
+            background-image: url('https://img.shetu66.com/2023/07/18/1689668516857776.png');
+            background-size: cover; background-position: center; background-attachment: fixed;
+            min-height: 100vh; color: #333; overflow-x: hidden;
+        }
+
+        .bg-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.45); z-index: 0; }
+
+        /* ================= 顶部导航栏 ================= */
+        .navbar {
+            position: fixed; top: 0; left: 0; width: 100%;
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 15px 40px; background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+            z-index: 100; border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .nav-left { display: flex; align-items: center; gap: 20px; }
+        .nav-logo img { height: 45px; width: auto; border-radius: 8px; mix-blend-mode: multiply; }
+        .nav-btn {
+            background: transparent; border: 1px solid rgba(255, 255, 255, 0.5);
+            color: white; padding: 8px 20px; border-radius: 8px; font-size: 15px;
+            cursor: pointer; transition: all 0.3s ease;
+        }
+        .nav-btn:hover { background: rgba(255, 255, 255, 0.2); border-color: white; }
+        .nav-links { display: flex; gap: 15px; align-items: center; }
+        .nav-btn.btn-login { background: var(--primary-gradient); border: none; font-weight: 600; box-shadow: 0 4px 15px rgba(255, 51, 102, 0.4); }
+        .nav-btn.btn-login:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(255, 51, 102, 0.6); }
+
+        .nav-dropdown { position: relative; display: none; }
+        .dropdown-content {
+            position: absolute; top: 120%; right: 0; min-width: 120px;
+            background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px);
+            border-radius: 8px; box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+            overflow: hidden; opacity: 0; visibility: hidden; transform: translateY(-10px);
+            transition: all 0.3s ease; border: 1px solid rgba(255, 51, 102, 0.2);
+        }
+        .nav-dropdown:hover .dropdown-content { opacity: 1; visibility: visible; transform: translateY(0); }
+        .dropdown-content a {
+            display: block; padding: 12px 20px; color: #333; text-decoration: none;
+            font-size: 14px; font-weight: 500; cursor: pointer; transition: all 0.2s;
+        }
+        .dropdown-content a:hover { background: rgba(255, 51, 102, 0.1); color: var(--primary-color); }
+
+        /* ================= 首页视图 ================= */
+        #home-view {
+            position: relative; z-index: 1; min-height: 100vh;
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 100px 60px 40px; gap: 40px;
+        }
+        .motto-container { flex: 1; display: flex; justify-content: center; align-items: center; }
+        .motto {
+            font-size: clamp(3rem, 10vw, 8rem); font-weight: 900; color: white;
+            letter-spacing: 25px; text-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+            background: var(--primary-gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            animation: pulse 2s infinite alternate; writing-mode: vertical-lr;
+        }
+        @keyframes pulse { 0% { transform: scale(1); } 100% { transform: scale(1.05); } }
+
+        .right-panel {
+            flex: 0 0 420px; background: rgba(255, 255, 255, 0.12);
+            backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 20px;
+            padding: 30px; display: flex; flex-direction: column; gap: 20px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3);
+        }
+        .widgets-container { display: flex; gap: 15px; }
+        .widget-box { flex: 1; background: rgba(0, 0, 0, 0.3); border-radius: 12px; padding: 12px; text-align: center; color: white; }
+        .widget-label { font-size: 12px; color: rgba(255, 255, 255, 0.7); margin-bottom: 5px; text-transform: uppercase; letter-spacing: 2px; }
+        .widget-value { font-size: 16px; font-weight: 600; }
+        
+        .quote-container {
+            display: flex; align-items: center; gap: 10px;
+            background: rgba(0, 0, 0, 0.2); padding: 10px 15px; border-radius: 10px;
+        }
+        .quote-box {
+            flex: 1; font-size: 15px; color: rgba(255, 255, 255, 0.9); font-style: italic;
+            text-align: center; line-height: 1.5; transition: opacity 0.3s ease;
+        }
+        .quote-box.fade { opacity: 0; }
+        .refresh-btn {
+            background: rgba(255, 51, 102, 0.2); border: 1px solid rgba(255, 51, 102, 0.5);
+            color: var(--primary-color); padding: 6px 12px; border-radius: 8px;
+            font-size: 12px; cursor: pointer; transition: all 0.3s ease;
+            white-space: nowrap; display: flex; align-items: center; gap: 4px;
+        }
+        .refresh-btn:hover { background: var(--primary-gradient); color: white; border-color: transparent; transform: scale(1.05); }
+        .refresh-btn .icon { display: inline-block; transition: transform 0.4s ease; }
+        .refresh-btn.spin .icon { transform: rotate(360deg); }
+
+        .goal-box { background: rgba(0, 0, 0, 0.3); border-radius: 12px; padding: 15px; color: white; }
+        .goal-title { font-size: 16px; font-weight: 600; margin-bottom: 12px; display: flex; justify-content: space-between; }
+        .goal-title span:last-child { color: var(--primary-color); }
+        .progress-bar-container { width: 100%; height: 10px; background: rgba(255, 255, 255, 0.2); border-radius: 5px; overflow: hidden; margin-bottom: 8px; }
+        .progress-fill { height: 100%; width: 0%; background: var(--primary-gradient); border-radius: 5px; transition: width 1s ease-in-out; }
+        .progress-text { font-size: 12px; text-align: right; color: rgba(255, 255, 255, 0.8); }
+        .calendar-box { background: rgba(0, 0, 0, 0.3); border-radius: 12px; padding: 15px; color: white; }
+        .calendar-header { font-size: 16px; font-weight: 600; text-align: center; margin-bottom: 10px; color: var(--primary-color); }
+        .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; text-align: center; }
+        .calendar-day-label { font-size: 11px; color: rgba(255, 255, 255, 0.6); padding-bottom: 5px; }
+        .calendar-date { font-size: 13px; padding: 6px 0; border-radius: 50%; transition: all 0.2s ease; cursor: default; }
+        .calendar-date.other-month { color: rgba(255, 255, 255, 0.2); }
+        .calendar-date.today { background: var(--primary-gradient); font-weight: 700; box-shadow: 0 2px 8px rgba(255, 51, 102, 0.5); }
+
+        /* ================= 模态框通用样式 ================= */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.7); backdrop-filter: blur(5px);
+            z-index: 200; display: flex; justify-content: center; align-items: center;
+            opacity: 0; pointer-events: none; transition: opacity 0.3s ease;
+        }
+        .modal-overlay.active { opacity: 1; pointer-events: auto; }
+        .close-btn { position: absolute; top: 15px; right: 20px; font-size: 24px; color: #999; cursor: pointer; background: none; border: none; transition: color 0.3s; z-index: 10; }
+        .close-btn:hover { color: var(--primary-color); }
+
+        .login-card { background: var(--card-bg); width: 100%; max-width: 400px; padding: 40px 30px; border-radius: 16px; box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5); position: relative; transform: translateY(20px); transition: transform 0.3s ease; }
+        .modal-overlay.active .login-card { transform: translateY(0); }
+        .login-title { font-size: 22px; color: #333; margin-bottom: 8px; font-weight: 600; text-align: center; }
+        .login-subtitle { font-size: 14px; color: #666; margin-bottom: 25px; text-align: center; }
+        .input-group { text-align: left; margin-bottom: 20px; }
+        
+        .label-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+        .label-row label {
+            font-size: 13px;
+            color: #555;
+            font-weight: 500;
+            margin: 0;
+        }
+        .forgot-btn {
+            background: none;
+            border: none;
+            color: var(--primary-color);
+            font-size: 13px;
+            cursor: pointer;
+            padding: 4px 8px;
+            font-family: inherit;
+            border-radius: 4px;
+            transition: all 0.2s ease;
+            text-decoration: underline;
+            pointer-events: auto;
+        }
+        .forgot-btn:hover {
+            background: rgba(255, 51, 102, 0.1);
+            color: #ff6633;
+        }
+
+        .input-group input { width: 100%; padding: 12px 16px; border: 1px solid #ddd; border-radius: 8px; font-size: 15px; outline: none; transition: all 0.3s ease; background: rgba(255, 255, 255, 0.9); }
+        .input-group input:focus { border-color: var(--primary-color); box-shadow: 0 0 0 3px rgba(255, 51, 102, 0.1); }
+        .show-pass-box { display: flex; align-items: center; margin-top: 8px; font-size: 13px; color: #666; cursor: pointer; }
+        .show-pass-box input { width: auto; margin-right: 6px; cursor: pointer; }
+        
+        .error-msg { color: var(--primary-color); font-size: 13px; margin-bottom: 15px; display: none; text-align: left; font-weight: bold; }
+
+        .manual-card { background: var(--card-bg); width: 100%; max-width: 800px; max-height: 85vh; padding: 40px 30px; border-radius: 16px; box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5); position: relative; transform: translateY(20px); transition: transform 0.3s ease; overflow-y: auto; }
+        .modal-overlay.active .manual-card { transform: translateY(0); }
+        .manual-title { font-size: 24px; color: #333; margin-bottom: 8px; font-weight: 700; text-align: center; }
+        .manual-subtitle { font-size: 14px; color: #666; margin-bottom: 30px; text-align: center; }
+        .manual-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; }
+        .manual-item { background: rgba(255, 255, 255, 0.8); border: 1px solid #eee; border-left: 4px solid var(--primary-color); border-radius: 10px; padding: 20px; }
+        .manual-item h3 { font-size: 16px; color: var(--primary-color); margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+        .manual-item ul { list-style: none; padding: 0; }
+        .manual-item li { font-size: 14px; color: #555; line-height: 1.6; margin-bottom: 8px; position: relative; padding-left: 18px; }
+        .manual-item li::before { content: "•"; color: var(--primary-color); font-weight: bold; position: absolute; left: 0; font-size: 18px; line-height: 1.4; }
+
+        .settings-card { background: var(--card-bg); width: 100%; max-width: 400px; padding: 40px 30px; border-radius: 16px; box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5); position: relative; transform: translateY(20px); transition: transform 0.3s ease; }
+        .modal-overlay.active .settings-card { transform: translateY(0); }
+        .settings-title { font-size: 22px; color: #333; margin-bottom: 8px; font-weight: 600; text-align: center; }
+        .settings-subtitle { font-size: 14px; color: #666; margin-bottom: 25px; text-align: center; }
+        .settings-group { text-align: left; margin-bottom: 20px; }
+        .settings-group label { display: block; font-size: 14px; color: #555; margin-bottom: 8px; font-weight: 500; }
+        .settings-group select {
+            width: 100%; padding: 12px 16px; border: 1px solid #ddd; border-radius: 8px;
+            font-size: 15px; outline: none; background: rgba(255, 255, 255, 0.9);
+            appearance: none; background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23666' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+            background-repeat: no-repeat; background-position: right 1rem center; background-size: 1em;
+        }
+
+        #dashboard-view { position: relative; z-index: 1; display: none; min-height: 100vh; padding: 100px 20px 40px; justify-content: center; }
+        .dashboard-card { background: var(--card-bg); width: 100%; max-width: 550px; padding: 40px 30px; border-radius: 16px; box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3); text-align: center; max-height: 80vh; overflow-y: auto; }
+        .runner-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid rgba(255, 51, 102, 0.2); padding-bottom: 15px; margin-bottom: 20px; }
+        .runner-name { font-size: 20px; font-weight: 700; color: #333; text-align: left; }
+        .runner-id { font-size: 13px; color: #888; }
+        .badge { padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 600; color: white; }
+        .badge-captain { background: var(--primary-color); }
+        .badge-member { background: #888; }
+        .data-section { margin-bottom: 25px; text-align: left; }
+        .section-title { font-size: 15px; font-weight: 600; color: var(--primary-color); margin-bottom: 12px; padding-left: 8px; border-left: 3px solid var(--primary-color); }
+        .data-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .data-item { background: rgba(255, 255, 255, 0.6); border: 1px solid #eee; border-radius: 8px; padding: 12px; }
+        .data-label { display: block; font-size: 12px; color: #888; margin-bottom: 4px; }
+        .data-value { font-size: 16px; font-weight: 600; color: #333; word-break: break-all; }
+        .data-item.full-width { grid-column: span 2; }
+        .suggestion-list { list-style: none; padding: 0; }
+        .suggestion-list li { background: rgba(255, 255, 255, 0.6); border: 1px solid #eee; border-left: 3px solid var(--primary-color); border-radius: 6px; padding: 10px 15px; margin-bottom: 10px; font-size: 14px; color: #444; line-height: 1.4; }
+        .suggestion-list li:last-child { margin-bottom: 0; }
+        .btn-submit { width: 100%; padding: 14px; background: var(--primary-gradient); color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: 600; cursor: pointer; transition: transform 0.2s ease; letter-spacing: 2px; margin-top: 10px; }
+        .btn-submit:hover { transform: translateY(-2px); }
+
+        .chat-bot-btn {
+            position: fixed; bottom: 30px; right: 30px; width: 60px; height: 60px;
+            border-radius: 50%; background: var(--primary-gradient); color: white;
+            border: none; font-size: 28px; cursor: pointer; z-index: 500;
+            box-shadow: 0 10px 25px rgba(255, 51, 102, 0.5);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            display: flex; justify-content: center; align-items: center;
+        }
+        .chat-bot-btn:hover { transform: scale(1.1); box-shadow: 0 15px 35px rgba(255, 51, 102, 0.7); }
+        .chat-window {
+            position: fixed; bottom: 100px; right: 30px; width: 350px; height: 500px;
+            background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(15px);
+            border-radius: 16px; box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4);
+            z-index: 500; display: flex; flex-direction: column; overflow: hidden;
+            transform: translateY(20px) scale(0.9); opacity: 0; pointer-events: none;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            border: 1px solid rgba(255, 51, 102, 0.2);
+        }
+        .chat-window.active { transform: translateY(0) scale(1); opacity: 1; pointer-events: auto; }
+        .chat-header { background: var(--primary-gradient); color: white; padding: 15px 20px; font-weight: 600; display: flex; justify-content: space-between; align-items: center; }
+        .chat-header .status { font-size: 12px; opacity: 0.8; font-weight: normal; }
+        .chat-header .close-chat { cursor: pointer; font-size: 20px; background: none; border: none; color: white; }
+        .chat-body { flex: 1; padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; background: #f9f9f9; }
+        .message { max-width: 80%; padding: 10px 15px; border-radius: 12px; font-size: 14px; line-height: 1.5; word-wrap: break-word; }
+        .message.bot { align-self: flex-start; background: white; color: #333; border-bottom-left-radius: 2px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        .message.user { align-self: flex-end; background: var(--primary-color); color: white; border-bottom-right-radius: 2px; box-shadow: 0 2px 5px rgba(255,51,102,0.3); }
+        .chat-input-area { padding: 10px; background: white; border-top: 1px solid #eee; display: flex; gap: 10px; }
+        .chat-input-area input { flex: 1; padding: 10px 15px; border: 1px solid #ddd; border-radius: 20px; outline: none; font-size: 14px; transition: border 0.3s; }
+        .chat-input-area input:focus { border-color: var(--primary-color); }
+        .chat-input-area button { background: var(--primary-gradient); color: white; border: none; width: 40px; height: 40px; border-radius: 50%; cursor: pointer; display: flex; justify-content: center; align-items: center; font-size: 18px; transition: transform 0.2s; }
+        .chat-input-area button:hover { transform: scale(1.1); }
+
+        /* ================= 自定义 Toast 提示框 ================= */
+        .custom-toast {
+            position: fixed; top: 50%; left: 50%;
+            transform: translate(-50%, -50%) scale(0.9);
+            background: linear-gradient(135deg, #ff3366 0%, #ff6633 100%);
+            color: white; padding: 24px 32px; border-radius: 16px; z-index: 9999;
+            font-size: 15px; line-height: 1.7; max-width: 420px; min-width: 280px; text-align: center;
+            box-shadow: 0 20px 60px rgba(255, 51, 102, 0.5), 0 0 0 4px rgba(255, 255, 255, 0.1);
+            opacity: 0; pointer-events: none;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            font-weight: 500; letter-spacing: 0.5px;
+        }
+        .custom-toast.show { opacity: 1; transform: translate(-50%, -50%) scale(1); pointer-events: auto; }
+        .custom-toast.warning { background: linear-gradient(135deg, #f59e0b 0%, #f97316 100%); box-shadow: 0 20px 60px rgba(245, 158, 11, 0.5), 0 0 0 4px rgba(255, 255, 255, 0.1); }
+        .custom-toast.info { background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%); box-shadow: 0 20px 60px rgba(59, 130, 246, 0.5), 0 0 0 4px rgba(255, 255, 255, 0.1); }
+
+        @media (max-width: 900px) {
+            #home-view { flex-direction: column; justify-content: center; padding: 100px 20px 40px; }
+            .motto { writing-mode: horizontal-tb; letter-spacing: 15px; text-align: center; margin-bottom: 20px; }
+            .right-panel { flex: 0 0 auto; width: 100%; max-width: 500px; }
+            .nav-left { gap: 10px; }
+        }
+        @media (max-width: 600px) {
+            .navbar { padding: 15px 20px; }
+            .nav-logo img { height: 35px; }
+            .nav-btn { padding: 6px 12px; font-size: 13px; }
+            .motto { font-size: 3rem; letter-spacing: 5px; }
+            .manual-grid { grid-template-columns: 1fr; }
+            .chat-window { width: calc(100vw - 40px); right: 20px; bottom: 90px; }
+            .chat-bot-btn { right: 20px; bottom: 20px; }
+            .quote-container { flex-direction: column; gap: 8px; }
+            .refresh-btn { width: 100%; justify-content: center; }
+            .custom-toast { max-width: calc(100vw - 40px); padding: 20px 24px; font-size: 14px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-overlay"></div>
+
+    <nav class="navbar">
+        <div class="nav-left">
+            <div class="nav-logo"><img src="123s.png" alt="123s Logo" onerror="this.style.display='none'"></div>
+            <button class="nav-btn" onclick="showTrainingManual()">训练宝典</button>
+        </div>
+        <div class="nav-links">
+            <button class="nav-btn" onclick="showHome()">首页</button>
+            <button class="nav-btn btn-login" id="nav-login-btn" onclick="showLoginModal()">登录</button>
+            <div class="nav-dropdown" id="nav-my-menu">
+                <button class="nav-btn btn-login">我的 ▼</button>
+                <div class="dropdown-content">
+                    <a onclick="showMyGrades()">📊 我的成绩</a>
+                    <a onclick="showSettings()">⚙️ 设置</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div id="home-view">
+        <div class="motto-container"><h1 class="motto">永不放弃</h1></div>
+        <div class="right-panel">
+            <div class="widgets-container">
+                <div class="widget-box"><span class="widget-label">日期</span><span class="widget-value" id="current-date">加载中...</span></div>
+                <div class="widget-box"><span class="widget-label">时间</span><span class="widget-value" id="current-time">加载中...</span></div>
+            </div>
+            
+            <div class="quote-container">
+                <div class="quote-box" id="quote-text">加载鼓励语中...</div>
+                <button class="refresh-btn" id="refresh-quote-btn" onclick="refreshQuote()">
+                    <span class="icon">🔄</span> 换一换
+                </button>
+            </div>
+
+            <div class="goal-box">
+                <div class="goal-title"><span>10月目标</span><span>国测通过</span></div>
+                <div class="progress-bar-container"><div class="progress-fill" id="progress-fill"></div></div>
+                <div class="progress-text" id="progress-text">进度：0%</div>
+            </div>
+            <div class="calendar-box">
+                <div class="calendar-header" id="calendar-header">2026年10月</div>
+                <div class="calendar-grid" id="calendar-grid"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 登录弹窗 -->
+    <div class="modal-overlay" id="login-modal">
+        <div class="login-card">
+            <button class="close-btn" onclick="closeLoginModal()">&times;</button>
+            <h2 class="login-title">跑者数据中心</h2>
+            <p class="login-subtitle">请输入账号密码获取体测数据</p>
+            <div class="input-group">
+                <label for="username">用户名</label>
+                <input type="text" id="username" placeholder="请输入用户名" autocomplete="off" onkeydown="handleLoginEnter(event)">
+            </div>
+            <div class="input-group">
+                <div class="label-row">
+                    <label for="password">密码</label>
+                    <button class="forgot-btn" id="forgot-password-btn" type="button">忘记密码？</button>
+                </div>
+                <input type="password" id="password" placeholder="请输入密码" autocomplete="new-password" onkeydown="handleLoginEnter(event)">
+                <label class="show-pass-box"><input type="checkbox" id="show-password" onclick="togglePassword()"> 显示密码</label>
+            </div>
+            <p class="error-msg" id="error-msg">❌ 账号或密码错误，请重试。</p>
+            <button class="btn-submit" onclick="handleLogin()">登 录</button>
+        </div>
+    </div>
+
+    <!-- 设置弹窗 -->
+    <div class="modal-overlay" id="settings-modal">
+        <div class="settings-card">
+            <button class="close-btn" onclick="closeSettings()">&times;</button>
+            <h2 class="settings-title">⚙️ 设置</h2>
+            <p class="settings-subtitle">个性化你的体验</p>
+            <div class="settings-group">
+                <label for="timezone-select">选择时区</label>
+                <select id="timezone-select" onchange="changeTimezone()">
+                    <option value="8">UTC+8 北京 / 上海</option>
+                    <option value="0">UTC+0 伦敦</option>
+                    <option value="-5">UTC-5 纽约</option>
+                    <option value="9">UTC+9 东京</option>
+                    <option value="-8">UTC-8 洛杉矶</option>
+                </select>
+            </div>
+            <button class="btn-submit" onclick="closeSettings()">保存并关闭</button>
+        </div>
+    </div>
+
+    <!-- 训练宝典弹窗 -->
+    <div class="modal-overlay" id="training-modal">
+        <div class="manual-card">
+            <button class="close-btn" onclick="closeTrainingManual()">&times;</button>
+            <h2 class="manual-title">📖 训练宝典</h2>
+            <p class="manual-subtitle">各项目训练要点，助你突破自我</p>
+            <div class="manual-grid">
+                <div class="manual-item"><h3>⚡ 50m 短跑</h3><ul><li>起跑反应：注意力高度集中，听到信号瞬间蹬地。</li><li>起跑姿势：前腿角度约90度，后腿约120度，重心前倾。</li><li>途中跑：步频与步幅结合，积极摆臂，前脚掌着地。</li><li>冲刺：保持身体前倾，全力压线，不减速。</li></ul></div>
+                <div class="manual-item"><h3>🏃 1000m 耐力跑</h3><ul><li>呼吸节奏：采用“两步一呼，两步一吸”或“三步一呼，三步一吸”。</li><li>体力分配：前400m匀速，中间400m保持节奏，最后200m全力冲刺。</li><li>极点克服：遇到“极点”时，适当降低速度，加深呼吸，坚持即可度过。</li><li>日常训练：每周2次LSD（长距离慢跑）和1次400m间歇跑。</li></ul></div>
+                <div class="manual-item"><h3>🦵 立定跳远</h3><ul><li>预摆：两臂前后摆动，前摆时伸直，后摆时屈膝降低重心。</li><li>蹬地发力：双脚快速用力蹬地，同时两臂由后向前上方摆动。</li><li>腾空展体：腾空后充分展体，收腹举腿，小腿前伸。</li><li>落地缓冲：脚跟先着地，迅速屈膝缓冲，保持平衡。</li></ul></div>
+                <div class="manual-item"><h3>💪 引体向上</h3><ul><li>握距：略宽于肩，正握单杠。</li><li>发力：背部（背阔肌）发力，而非单纯靠手臂拉。</li><li>核心：收紧核心，身体保持稳定，避免过度摆动借力。</li><li>进阶：若个数少，可先做斜身引体或使用弹力带辅助训练。</li></ul></div>
+                <div class="manual-item"><h3>🧘 坐位体前屈</h3><ul><li>热身：测试前务必进行充分的动态拉伸，避免拉伤。</li><li>动作：坐姿，双腿伸直，呼气时上体前屈，双手匀速向前推。</li><li>呼吸：呼气时下压，吸气时保持，不要憋气。</li><li>日常：每天坚持站姿体前屈和坐姿拉伸，每次保持15-30秒。</li></ul></div>
+                <div class="manual-item"><h3>🫁 肺活量</h3><ul><li>有氧训练：坚持跑步、游泳等有氧运动，提升心肺功能。</li><li>深呼吸：每天进行深呼吸练习，吸气时腹部隆起，呼气时腹部收缩。</li><li>吹气技巧：测试时先深吸一口气，然后匀速、缓慢地将气吹入仪器。</li><li>生活习惯：保持良好的作息，远离烟草。</li></ul></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="dashboard-view">
+        <div class="dashboard-card">
+            <div class="runner-header">
+                <div><div class="runner-name" id="display-name">跑者姓名</div><div class="runner-id" id="display-id">编号：RUN-000</div></div>
+                <div id="display-badge"></div>
+            </div>
+            <div class="data-section">
+                <div class="section-title">基本信息</div>
+                <div class="data-grid">
+                    <div class="data-item"><span class="data-label">代号</span><span class="data-value" id="d-codename"></span></div>
+                    <div class="data-item"><span class="data-label">性别</span><span class="data-value" id="d-gender"></span></div>
+                    <div class="data-item"><span class="data-label">年龄</span><span class="data-value" id="d-age"></span></div>
+                    <div class="data-item"><span class="data-label">出生年月日</span><span class="data-value" id="d-dob"></span></div>
+                    <div class="data-item"><span class="data-label">身高</span><span class="data-value" id="d-height"></span></div>
+                    <div class="data-item"><span class="data-label">体重</span><span class="data-value" id="d-weight"></span></div>
+                </div>
+            </div>
+            <div class="data-section">
+                <div class="section-title">体测成绩</div>
+                <div class="data-grid">
+                    <div class="data-item"><span class="data-label">50m</span><span class="data-value" id="d-50m"></span></div>
+                    <div class="data-item"><span class="data-label">1000m</span><span class="data-value" id="d-1000m"></span></div>
+                    <div class="data-item"><span class="data-label">立定跳远</span><span class="data-value" id="d-jump"></span></div>
+                    <div class="data-item"><span class="data-label">引体向上</span><span class="data-value" id="d-pullup"></span></div>
+                    <div class="data-item"><span class="data-label">坐位体前屈</span><span class="data-value" id="d-sitreach"></span></div>
+                    <div class="data-item"><span class="data-label">肺活量</span><span class="data-value" id="d-lung"></span></div>
+                    <div class="data-item full-width"><span class="data-label">近次体考成绩</span><span class="data-value" id="d-recent-score"></span></div>
+                </div>
+            </div>
+            <div class="data-section">
+                <div class="section-title">专属训练建议</div>
+                <ul class="suggestion-list" id="d-suggestions"></ul>
+            </div>
+            <div class="data-section">
+                <div class="section-title">队伍信息</div>
+                <div class="data-grid">
+                    <div class="data-item full-width"><span class="data-label">惯用起跑腿 / 脚</span><span class="data-value" id="d-startleg"></span></div>
+                    <div class="data-item full-width"><span class="data-label">当前队伍成员</span><span class="data-value" id="d-members"></span></div>
+                </div>
+            </div>
+            <button class="btn-submit" style="background: #555; margin-top: 20px;" onclick="logout()">退出登录</button>
+        </div>
+    </div>
+
+    <button class="chat-bot-btn" onclick="toggleChat()">🤖</button>
+    <div class="chat-window" id="chat-window">
+        <div class="chat-header">
+            <div><div>123s 训练助手</div><div class="status">🟢 在线解答训练问题</div></div>
+            <button class="close-chat" onclick="toggleChat()">&times;</button>
+        </div>
+        <div class="chat-body" id="chat-body">
+            <div class="message bot">你好！我是 123s 训练助手。有什么关于体测训练的问题，随时问我！</div>
+        </div>
+        <div class="chat-input-area">
+            <input type="text" id="chat-input" placeholder="输入你的问题..." onkeypress="handleChatEnter(event)">
+            <button onclick="sendChatMessage()">➤</button>
+        </div>
+    </div>
+
+    <div class="custom-toast" id="custom-toast"></div>
+
+    <script>
+        // 全局变量
+        let currentRunner = null;
+        let timezoneOffset = 8;
+
+        // ================= 自定义 Toast 提示框 =================
+        let toastTimer = null;
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('custom-toast');
+            toast.innerHTML = message.replace(/\n/g, '<br>');
+            toast.className = 'custom-toast ' + type;
+            void toast.offsetWidth;
+            toast.classList.add('show');
+            if (toastTimer) clearTimeout(toastTimer);
+            toastTimer = setTimeout(() => { toast.classList.remove('show'); }, 3000);
+        }
+
+        // ================= 首页时间日期与鼓励语 =================
+        const quotes = [
+            "只要跑得够快，烦恼就追不上你。",
+            "征服自己，比征服世界更伟大。",
+            "你的每一次呼吸，都在塑造更强大的你。",
+            "不要停下，因为奇迹就在下一步。",
+            "成绩不是终点，坚持才是。",
+            "今天流的汗，是明天骄傲的资本。",
+            "自律给我自由。",
+            "跑步是与自己的对话。",
+            "每一次起跑，都是一次重生。",
+            "不为掌声，只为超越昨天的自己。",
+            "速度会老去，但热爱不会。",
+            "跑步的意义，不在终点，而在路上。",
+            "当你觉得坚持不下去时，正是你需要坚持的时候。",
+            "没有白走的路，每一步都算数。",
+            "强者不是没有眼泪，而是含着眼泪继续奔跑。",
+            "你的身体会记住你付出的每一分努力。",
+            "跑得快不如跑得久，跑得久不如跑得快乐。",
+            "今天的痛苦，是明天的勋章。",
+            "与其羡慕别人，不如跑出自己。",
+            "路在脚下，梦在前方。"
+        ];
+
+        function updateClock() {
+            const now = new Date();
+            const targetTime = new Date(now.getTime() + (timezoneOffset * 3600000));
+            const year = targetTime.getUTCFullYear();
+            const month = targetTime.getUTCMonth() + 1;
+            const date = targetTime.getUTCDate();
+            const weekdays = ['星期日', '星期一', '星期二', '星期三', '星期四', '星期五', '星期六'];
+            const weekday = weekdays[targetTime.getUTCDay()];
+            document.getElementById('current-date').textContent = `${year}年${month}月${date}日 ${weekday}`;
+            const hours = String(targetTime.getUTCHours()).padStart(2, '0');
+            const minutes = String(targetTime.getUTCMinutes()).padStart(2, '0');
+            const seconds = String(targetTime.getUTCSeconds()).padStart(2, '0');
+            document.getElementById('current-time').textContent = `${hours}:${minutes}:${seconds}`;
+        }
+
+        function showRandomQuote() {
+            document.getElementById('quote-text').textContent = `「 ${quotes[Math.floor(Math.random() * quotes.length)]} 」`;
+        }
+
+        function refreshQuote() {
+            const quoteBox = document.getElementById('quote-text');
+            const btn = document.getElementById('refresh-quote-btn');
+            quoteBox.classList.add('fade');
+            btn.classList.add('spin');
+            setTimeout(() => {
+                let newIndex;
+                do { newIndex = Math.floor(Math.random() * quotes.length); }
+                while (quotes[newIndex] === quoteBox.textContent.replace(/「 | 」/g, ''));
+                quoteBox.textContent = `「 ${quotes[newIndex]} 」`;
+                quoteBox.classList.remove('fade');
+                setTimeout(() => btn.classList.remove('spin'), 400);
+            }, 300);
+        }
+
+        function updateProgress() {
+            const now = new Date(); const currentMonth = now.getMonth() + 1; const currentDate = now.getDate();
+            const daysInMonth = new Date(now.getFullYear(), currentMonth, 0).getDate();
+            let progressPercent = currentMonth > 10 ? 100 : (currentMonth === 10 ? Math.round((currentDate / daysInMonth) * 100) : 0);
+            document.getElementById('progress-fill').style.width = progressPercent + '%';
+            document.getElementById('progress-text').textContent = `进度：${progressPercent}%`;
+        }
+
+        function renderCalendar() {
+            const now = new Date(); const year = now.getFullYear(); const month = now.getMonth(); const today = now.getDate();
+            document.getElementById('calendar-header').textContent = `${year}年${month + 1}月`;
+            const grid = document.getElementById('calendar-grid'); grid.innerHTML = '';
+            ['日', '一', '二', '三', '四', '五', '六'].forEach(label => {
+                const div = document.createElement('div'); div.className = 'calendar-day-label'; div.textContent = label; grid.appendChild(div);
+            });
+            const firstDay = new Date(year, month, 1).getDay(); const daysInMonth = new Date(year, month + 1, 0).getDate(); const prevMonthDays = new Date(year, month, 0).getDate();
+            for (let i = firstDay - 1; i >= 0; i--) {
+                const div = document.createElement('div'); div.className = 'calendar-date other-month'; div.textContent = prevMonthDays - i; grid.appendChild(div);
+            }
+            for (let i = 1; i <= daysInMonth; i++) {
+                const div = document.createElement('div'); div.className = 'calendar-date'; div.textContent = i;
+                if (i === today) div.classList.add('today');
+                grid.appendChild(div);
+            }
+        }
+
+        setInterval(updateClock, 1000); updateClock(); showRandomQuote(); updateProgress(); renderCalendar();
+
+        // ================= 视图与弹窗控制 =================
+        function showHome() {
+            document.getElementById('home-view').style.display = 'flex';
+            document.getElementById('dashboard-view').style.display = 'none';
+            closeLoginModal(); closeTrainingManual(); closeSettings();
+        }
+        function showLoginModal() { document.getElementById('login-modal').classList.add('active'); closeTrainingManual(); closeSettings(); }
+        function closeLoginModal() { document.getElementById('login-modal').classList.remove('active'); document.getElementById('error-msg').style.display = 'none'; }
+        function showTrainingManual() { document.getElementById('training-modal').classList.add('active'); closeLoginModal(); closeSettings(); }
+        function closeTrainingManual() { document.getElementById('training-modal').classList.remove('active'); }
+        function showSettings() { document.getElementById('settings-modal').classList.add('active'); closeLoginModal(); closeTrainingManual(); }
+        function closeSettings() { document.getElementById('settings-modal').classList.remove('active'); }
+
+        document.getElementById('login-modal').addEventListener('click', function(e) { if (e.target === this) closeLoginModal(); });
+        document.getElementById('training-modal').addEventListener('click', function(e) { if (e.target === this) closeTrainingManual(); });
+        document.getElementById('settings-modal').addEventListener('click', function(e) { if (e.target === this) closeSettings(); });
+
+        // ================= 登录与登出逻辑 =================
+        function togglePassword() { document.getElementById('password').type = document.getElementById('show-password').checked ? 'text' : 'password'; }
+        function handleLoginEnter(event) { if (event.key === 'Enter') { event.preventDefault(); handleLogin(); } }
+
+        // 忘记密码（请求后台）
+        async function showForgotPassword() {
+            const usernameInput = document.getElementById('username').value.trim();
+            if (!usernameInput) {
+                showToast('⚠️ 请先输入用户名\n\n我才能帮你查找对应的密码提示哦！', 'warning');
+                document.getElementById('username').focus();
+                return;
+            }
+            try {
+                const response = await fetch('http://localhost:3000/api/forgot-password', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username: usernameInput })
+                });
+                const data = await response.json();
+                if (data.success) {
+                    showToast('🔐 ' + data.message, 'info');
+                } else {
+                    showToast('❌ ' + data.message, 'warning');
+                }
+            } catch (err) {
+                showToast('❌ 无法连接服务器，请确认后台已启动', 'warning');
+            }
+        }
+
+        // 登录（请求后台）
+        async function handleLogin() {
+            const username = document.getElementById('username').value.trim();
+            const password = document.getElementById('password').value.trim();
+            const errorMsg = document.getElementById('error-msg');
+
+            if (!username || !password) {
+                showToast('⚠️ 请填写用户名和密码', 'warning');
+                return;
+            }
+
+            try {
+                const response = await fetch('http://localhost:3000/api/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    errorMsg.style.display = 'none';
+                    closeLoginModal();
+                    currentRunner = data.info;
+                    document.getElementById('nav-login-btn').style.display = 'none';
+                    document.getElementById('nav-my-menu').style.display = 'block';
+                    renderDashboard(data.info);
+                    showToast(`👋 欢迎回来，${data.info.name}！`, 'info');
+                } else {
+                    errorMsg.style.display = 'block';
+                    showToast('❌ ' + data.message, 'warning');
+                }
+            } catch (err) {
+                console.error(err);
+                showToast('❌ 无法连接服务器\n\n请确认后台命令行窗口正在运行！', 'warning');
+            }
+        }
+
+        function logout() {
+            document.getElementById('username').value = ''; document.getElementById('password').value = '';
+            document.getElementById('show-password').checked = false; togglePassword();
+            currentRunner = null;
+            document.getElementById('nav-login-btn').style.display = 'block';
+            document.getElementById('nav-my-menu').style.display = 'none';
+            showHome();
+        }
+
+        function showMyGrades() {
+            if (currentRunner) renderDashboard(currentRunner);
+            else showToast('🔒 请先登录才能查看成绩！', 'warning');
+        }
+
+        function changeTimezone() {
+            const select = document.getElementById('timezone-select');
+            timezoneOffset = parseInt(select.value);
+            updateClock();
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const forgotBtn = document.getElementById('forgot-password-btn');
+            if (forgotBtn) {
+                forgotBtn.addEventListener('click', function(e) {
+                    e.preventDefault(); e.stopPropagation();
+                    showForgotPassword();
+                });
+            }
+        });
+
+        // ================= 数据渲染 =================
+        function generateSuggestions(info) {
+            let s = [];
+            if (info.run1000m.includes('min')) {
+                let m = parseFloat(info.run1000m.split('min')[0]);
+                if (m >= 4) s.push("🏃 耐力提升：1000m成绩偏弱，建议每周安排2次长距离慢跑（LSD）和400m间歇跑。");
+                else if (m >= 3.5) s.push("🏃 耐力提升：1000m成绩有待加强，建议增加有氧跑量，并结合变速跑提升耐力。");
+            }
+            if (info.run50m && info.run50m.includes("'")) {
+                let t = parseFloat(info.run50m.replace(/['"]/g, '.').replace(/\.$/, ''));
+                if (t > 7.8) s.push("⚡ 爆发力提升：50m起跑与冲刺能力有较大提升空间，建议进行起跑器练习、30m冲刺跑和蛙跳。");
+                else if (t > 7.5) s.push("⚡ 爆发力提升：50m起跑与冲刺能力有提升空间，建议进行起跑器练习和短距离冲刺跑。");
+            }
+            if (info.pullup && info.pullup.includes('个')) {
+                let c = parseInt(info.pullup);
+                if (c <= 2) s.push("💪 上肢力量：引体向上个数极少，建议使用弹力带辅助引体、高位下拉和俯卧撑。");
+                else if (c < 5) s.push("💪 上肢力量：引体向上个数较少，建议使用弹力带辅助引体、俯卧撑和反向划船。");
+            }
+            if (info.sitreach && info.sitreach.includes('cm')) {
+                let v = parseFloat(info.sitreach);
+                if (v < 10) s.push("🧘 柔韧性：坐位体前屈成绩严重偏低，建议每日进行站姿体前屈、坐姿拉伸和动态拉伸。");
+                else if (v < 15) s.push("🧘 柔韧性：坐位体前屈成绩偏低，建议每日进行站姿体前屈、坐姿拉伸。");
+            }
+            if (info.jump && info.jump.includes('cm')) {
+                let v = parseInt(info.jump);
+                if (v < 210) s.push("🦵 下肢爆发力：立定跳远成绩有较大提升空间，建议增加深蹲跳、跳箱和单腿跳。");
+                else if (v < 230) s.push("🦵 下肢爆发力：立定跳远成绩有进步空间，建议增加深蹲跳和跳箱训练。");
+            }
+            if (s.length === 0) s.push("🌟 综合表现优秀！各项成绩均衡，建议保持当前训练节奏，继续突破！");
+            return s;
+        }
+
+        function renderDashboard(info) {
+            document.getElementById('home-view').style.display = 'none';
+            document.getElementById('dashboard-view').style.display = 'flex';
+            document.getElementById('dashboard-view').scrollTop = 0;
+
+            document.getElementById('display-name').textContent = info.name;
+            document.getElementById('display-id').textContent = '编号：' + info.id;
+            document.getElementById('display-badge').innerHTML = `<span class="badge ${info.role === '队长' ? 'badge-captain' : 'badge-member'}">${info.role}</span>`;
+            document.getElementById('d-codename').textContent = info.codename || '未知';
+            document.getElementById('d-gender').textContent = info.gender;
+            let ageDisplay = info.age.includes('岁') ? info.age : info.age + ' 岁';
+            document.getElementById('d-age').textContent = ageDisplay;
+            document.getElementById('d-dob').textContent = info.dob;
+            document.getElementById('d-height').textContent = info.height;
+            document.getElementById('d-weight').textContent = info.weight;
+            document.getElementById('d-50m').textContent = info.run50m;
+            document.getElementById('d-1000m').textContent = info.run1000m;
+            document.getElementById('d-jump').textContent = info.jump;
+            document.getElementById('d-pullup').textContent = info.pullup;
+            document.getElementById('d-sitreach').textContent = info.sitreach;
+            document.getElementById('d-lung').textContent = info.lung;
+            document.getElementById('d-recent-score').textContent = info.recentScore;
+            
+            const sc = document.getElementById('d-suggestions'); sc.innerHTML = ''; 
+            generateSuggestions(info).forEach(text => { const li = document.createElement('li'); li.textContent = text; sc.appendChild(li); });
+            
+            document.getElementById('d-startleg').textContent = info.startleg;
+            document.getElementById('d-members').textContent = info.members;
+        }
+
+        // ================= 对话机器人 =================
+        function toggleChat() { document.getElementById('chat-window').classList.toggle('active'); }
+        function handleChatEnter(e) { if (e.key === 'Enter') sendChatMessage(); }
+        function addMessage(text, sender) {
+            const chatBody = document.getElementById('chat-body');
+            const msgDiv = document.createElement('div');
+            msgDiv.className = `message ${sender}`;
+            msgDiv.innerHTML = text.replace(/\n/g, '<br>');
+            chatBody.appendChild(msgDiv);
+            chatBody.scrollTop = chatBody.scrollHeight;
+        }
+        function sendChatMessage() {
+            const input = document.getElementById('chat-input');
+            const text = input.value.trim(); if (!text) return;
+            addMessage(text, 'user'); input.value = '';
+            setTimeout(() => { addMessage(generateBotReply(text), 'bot'); }, 600);
+        }
+
+        function generateBotReply(inputText) {
+            let text = inputText
+                .replace(/[\s\n\r]+/g, '')
+                .replace(/[，。！？、；：""''（）《》【】…—～·,.!?;:'"()<>\[\]{}]/g, '')
+                .replace(/[\u{1F600}-\u{1F64F}\u{1F300}-\u{1F5FF}\u{1F680}-\u{1F6FF}\u{1F1E0}-\u{1F1FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]/gu, '')
+                .toLowerCase();
+
+            if (!text) return "🤖 我好像只看到了符号，没看到文字。你可以输入具体的训练问题，比如“引体向上怎么练？”。";
+
+            if (text.includes('你好') || text.includes('在吗') || text.includes('hi') || text.includes('hello') || text.includes('嗨')) 
+                return "👋 你好！我是 123s 训练助手。\n\n我可以帮你：\n• 解答训练问题\n• 查询成绩\n• 调整时区\n• 计算BMI\n\n随时问我！";
+
+            if (text.includes('时区') || text.includes('时间调整')) {
+                if (text.includes('东京') || text.includes('日本')) { timezoneOffset = 9; updateClock(); return "✅ 已帮你把时区调整为 UTC+9 东京时间。"; }
+                if (text.includes('伦敦') || text.includes('英国')) { timezoneOffset = 0; updateClock(); return "✅ 已帮你把时区调整为 UTC+0 伦敦时间。"; }
+                if (text.includes('纽约') || text.includes('美国')) { timezoneOffset = -5; updateClock(); return "✅ 已帮你把时区调整为 UTC-5 纽约时间。"; }
+                if (text.includes('洛杉矶')) { timezoneOffset = -8; updateClock(); return "✅ 已帮你把时区调整为 UTC-8 洛杉矶时间。"; }
+                if (text.includes('北京') || text.includes('中国')) { timezoneOffset = 8; updateClock(); return "✅ 已帮你把时区调整为 UTC+8 北京时间。"; }
+                return "🌍 你可以告诉我你想切换到哪个时区，比如“把时区改成东京”。";
+            }
+
+            if (text.includes('bmi') || text.includes('体重指数')) {
+                if (currentRunner && currentRunner.height && currentRunner.weight) {
+                    let h = parseFloat(currentRunner.height) / 100;
+                    let w = parseFloat(currentRunner.weight);
+                    if (!isNaN(h) && !isNaN(w)) {
+                        let bmi = (w / (h * h)).toFixed(1);
+                        let level = bmi < 18.5 ? "偏瘦" : (bmi < 24 ? "正常" : (bmi < 28 ? "超重" : "肥胖"));
+                        return `📊 你的 BMI 指数为：${bmi}（${level}）\n\n身高：${currentRunner.height}\n体重：${currentRunner.weight}`;
+                    }
+                }
+                return "📊 请先登录，我才能获取你的身高体重来计算 BMI。";
+            }
+
+            if (text.includes('换算') || text.includes('几分几秒')) return "⏱️ 你可以这样问我：“3min25s等于多少秒？”我会帮你换算。";
+            if (text.includes('min') && text.includes('秒')) {
+                let min = parseFloat(text.match(/(\d+(\.\d+)?)min/)?.[1]);
+                let sec = parseFloat(text.match(/min(\d+(\.\d+)?)/)?.[1] || 0);
+                if (!isNaN(min)) { let total = min * 60 + (isNaN(sec) ? 0 : sec); return `⏱️ ${min}分${sec}秒 = ${total} 秒。`; }
+            }
+
+            if (text.includes('天气')) return "🌤️ 我暂时无法联网查天气。\n\n但建议你：训练前看下窗外，如果下雨就在室内做核心训练，别偷懒！";
+            if (text.includes('记录') || text.includes('日志')) return "📝 你可以告诉我今天跑了多少公里，我会帮你记住（纯前端暂存，刷新可能丢失）。";
+
+            if (text.includes('50m') || text.includes('短跑') || text.includes('起跑') || text.includes('加速')) {
+                let r = "⚡ 50m 短跑要点：\n1. 起跑反应：听到信号瞬间蹬地。\n2. 起跑姿势：前腿约90度，后腿约120度。\n3. 途中跑：积极摆臂，前脚掌着地。\n4. 冲刺：全力压线，不减速。\n\n";
+                if (currentRunner) r += `📊 你目前的50m成绩是：${currentRunner.run50m}。`;
+                return r;
+            }
+            if (text.includes('1000') || text.includes('长跑') || text.includes('耐力') || text.includes('呼吸')) {
+                let r = "🏃 1000m 耐力跑要点：\n1. 呼吸：两步一呼，两步一吸。\n2. 分配：前400m匀速，中间400m保持，最后200m冲刺。\n3. 极点：遇到“极点”时，降低速度，加深呼吸。\n4. 训练：每周2次LSD和1次400m间歇跑。\n\n";
+                if (currentRunner) r += `📊 你目前的1000m成绩是：${currentRunner.run1000m}。`;
+                return r;
+            }
+            if (text.includes('跳远') || text.includes('立定') || text.includes('弹跳')) {
+                let r = "🦵 立定跳远要点：\n1. 预摆：两臂前后摆动，屈膝降低重心。\n2. 蹬地：双脚快速用力蹬地。\n3. 腾空：展体，收腹举腿，小腿前伸。\n4. 落地：脚跟先着地，屈膝缓冲。\n\n";
+                if (currentRunner) r += `📊 你目前的跳远成绩是：${currentRunner.jump}。`;
+                return r;
+            }
+            if (text.includes('引体') || text.includes('手臂') || text.includes('背')) {
+                let r = "💪 引体向上要点：\n1. 背部发力，而非单纯手臂。\n2. 收紧核心，避免摆动借力。\n3. 个数少时，用弹力带辅助或做斜身引体。\n\n";
+                if (currentRunner) r += `📊 你目前的引体向上成绩是：${currentRunner.pullup}。`;
+                return r;
+            }
+            if (text.includes('体前屈') || text.includes('柔韧') || text.includes('拉伸')) {
+                let r = "🧘 坐位体前屈要点：\n1. 测试前充分动态拉伸。\n2. 呼气时上体前屈，匀速向前推。\n3. 每天坚持拉伸，每次15-30秒。\n\n";
+                if (currentRunner) r += `📊 你目前的体前屈成绩是：${currentRunner.sitreach}。`;
+                return r;
+            }
+            if (text.includes('肺活量') || text.includes('吹气') || text.includes('呼吸')) {
+                let r = "🫁 肺活量提升：\n1. 坚持有氧运动。\n2. 每天练习深呼吸。\n3. 吹气时匀速、缓慢。\n\n";
+                if (currentRunner) r += `📊 你目前的肺活量成绩是：${currentRunner.lung}。`;
+                return r;
+            }
+            if (text.includes('热身') || text.includes('准备活动')) return "🔥 热身建议：\n训练前进行5-10分钟慢跑 + 动态拉伸（高抬腿、弓步压腿、开合跳），让身体微微出汗即可。";
+            if (text.includes('放松')) return "🧘 拉伸建议：\n训练后进行静态拉伸，每个动作保持15-30秒，重点拉伸大腿前后侧、小腿和肩背。";
+            if (text.includes('喝水') || text.includes('补水') || text.includes('水分')) return "💧 补水建议：\n训练前30分钟喝200-300ml水，训练中少量多次，训练后及时补充电解质。";
+            if (text.includes('吃') || text.includes('营养') || text.includes('饮食')) return "🍎 营养建议：\n训练后30分钟内补充蛋白质（鸡蛋、牛奶）和碳水（香蕉、全麦面包），帮助恢复。";
+            if (text.includes('睡眠') || text.includes('休息')) return "😴 睡眠建议：\n每天保证8-9小时睡眠，肌肉在睡眠中修复，熬夜会严重影响训练效果。";
+            if (text.includes('拉伤') || text.includes('受伤') || text.includes('疼')) return "🚑 受伤建议：\n立即停止训练，冰敷15-20分钟，抬高患处。如果疼痛持续，务必就医。千万不要带伤训练！";
+            if (text.includes('膝盖') || text.includes('关节')) return "🦵 膝盖保护：\n跑步时避免膝盖内扣，加强臀腿力量训练（深蹲、臀桥），选择缓冲好的跑鞋。";
+            if (text.includes('鞋子') || text.includes('跑鞋')) return "👟 跑鞋建议：\n选择缓冲和支撑性好的跑鞋，每500-800公里更换一次。体测时穿轻便的竞速鞋。";
+            if (text.includes('心理') || text.includes('紧张') || text.includes('害怕')) return "🧠 心理建议：\n深呼吸，告诉自己“我已经准备好了”。把注意力放在动作上，而不是结果上。记住：永不放弃！";
+            if (text.includes('激励') || text.includes('鼓励') || text.includes('不想跑') || text.includes('累')) return "💪 别放弃！\n记住我们的口号：“永不放弃”！每一次流汗，都是你变强的证明。休息一下，继续出发！";
+
+            if (text.includes('储旭东') || text.includes('墨')) return "📋 储旭东是 123s 的队长，代号“墨”，近次体考成绩 90.6 分，非常优秀！";
+            if (text.includes('汤子麒')) return "📋 汤子麒（代号T）是队员，体考成绩 85 分，1000m 成绩 3min49s，耐力不错。";
+            if (text.includes('王宸赫')) return "📋 王宸赫（代号赫）是队员，体考成绩 78 分，跳远成绩 225cm 还可以，引体向上（3个）需要加强。";
+            if (text.includes('胡钟灿')) return "📋 胡钟灿是队员，体测数据大部分还有待提升，需要多加练习，加油！";
+            if (text.includes('队长')) return "📋 123s 的队长是储旭东（代号：墨），编号 123sZ01。";
+
+            if (text.includes('我的成绩') || text.includes('我的数据') || text.includes('查成绩')) {
+                if (currentRunner) return `📋 ${currentRunner.name} 的体测档案：\n\n代号：${currentRunner.codename}\n50m：${currentRunner.run50m}\n1000m：${currentRunner.run1000m}\n立定跳远：${currentRunner.jump}\n引体向上：${currentRunner.pullup}\n坐位体前屈：${currentRunner.sitreach}\n肺活量：${currentRunner.lung}\n近次体考：${currentRunner.recentScore}`;
+                else return "🔒 你还没有登录哦！请先点击右上角的“登录”按钮。";
+            }
+
+            if (text.includes('训练宝典') || text.includes('在哪')) return "📖 训练宝典在顶部导航栏左侧，点击即可查看各项目训练要点。";
+            if (text.includes('设置')) return "⚙️ 设置在你的“我的”下拉菜单里，点击即可打开，可以调整时区。";
+            if (text.includes('忘记密码') || text.includes('密码')) return "🔐 如果忘记密码，在登录弹窗里点击“忘记密码”，我会提示你 30% 的密码哦！";
+            if (text.includes('换一换') || text.includes('鼓励语')) return "💬 在首页鼓励语旁边有一个“换一换”按钮，点击可以随机切换一条新的鼓励语！";
+
+            return "🤖 抱歉，我还在学习中。\n\n你可以尝试这样问我：\n1. “引体向上怎么练？”\n2. “1000m怎么跑？”\n3. “把时区改成东京”\n4. “我的BMI是多少？”\n5. “我的成绩是多少？”\n6. “训练宝典在哪？”\n7. “我累了不想跑”";
+        }
+    </script>
+</body>
+</html>
